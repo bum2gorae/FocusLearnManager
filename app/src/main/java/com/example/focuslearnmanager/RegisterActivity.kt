@@ -1,5 +1,12 @@
 package com.example.focuslearnmanager
 
+import android.app.Activity
+import android.os.Bundle
+import android.util.Log
+import android.widget.Toast
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,6 +28,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
@@ -30,15 +38,39 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.example.focuslearnmanager.ui.theme.FocusLearnManagerTheme
+import com.google.firebase.Firebase
+import com.google.firebase.firestore.firestore
+
+
+class RegisterActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+        setContent {
+            FocusLearnManagerTheme {
+                SignUpScreen()
+            }
+        }
+    }
+}
+
+
 
 @Composable
-fun SignUpScreen(navController: NavHostController) {
+fun SignUpScreen() {
     var companyCode by remember { mutableStateOf("") }
     var companyName by remember { mutableStateOf("") }
     var companyEmail by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
-    var duplicateCheck by remember { mutableStateOf(false) }
+    var checkResult by remember { mutableStateOf(false) } //에러코드 발생시 true
+    var checkCode by remember { mutableStateOf("")} //에러코드 발생시 입력
+    val checkCodeMap = mapOf("E01" to "Duplicated", //에러코드 관리
+        "E02" to "Not exist CompanyCode",
+        "E03" to "Not matching CompanyName")
+    val fireDB = Firebase.firestore
+    val context = LocalContext.current
+    val contextAct = LocalContext.current as Activity?
 
     Column(
         modifier = Modifier
@@ -112,7 +144,25 @@ fun SignUpScreen(navController: NavHostController) {
                 .size(width = 80.dp, height = 60.dp)
         ) {
             Button(
-                onClick = { /* Handle sign up logic */ },
+                onClick = {
+                    val resultDB = fireDB.collection("Company").document(companyCode)
+                    resultDB.get().addOnSuccessListener { document ->
+                        if (document.exists()){
+                            val companyNameDB = document.get("CompanyName")
+                            if (companyNameDB==companyName) {
+                                if (document.get("Password")==null) {
+                                    val setData = mutableMapOf("companyEmail" to companyEmail,
+                                        "Password" to password,
+                                        "CompanyName" to companyName)
+                                    resultDB.set(setData)
+                                    checkCode = ""
+                                    Toast.makeText(context, "등록되었습니다", Toast.LENGTH_SHORT).show()
+                                    contextAct?.finish()
+                                } else checkCode = "E01"; checkResult = true //duplicated
+                            } else checkCode = "E03"; checkResult = true //companyname error
+                        } else checkCode = "E02"; checkResult = true //companycode error
+                    }
+                },
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(bottom = 16.dp),
@@ -123,11 +173,14 @@ fun SignUpScreen(navController: NavHostController) {
             }
         }
         Text(
-            text = if (duplicateCheck) {
-                "계정이 이미 있습니다"
-            } else {
-                ""
-            },
+            text = if (checkResult) {
+                when (checkCode) {
+                    "E01" -> "등록된 계정이 있습니다."
+                    "E02" -> "없는 회사코드입니다"
+                    "E03" -> "회사명이 일치하지 않습니다"
+                    else -> ""
+                }
+            } else "",
             color = Color.Black,
             modifier = Modifier
                 .padding(top = 8.dp),
@@ -140,8 +193,7 @@ fun SignUpScreen(navController: NavHostController) {
 @Composable
 fun SignUpScreenPreview() {
     FocusLearnManagerTheme {
-        val navController = rememberNavController()
-        SignUpScreen(navController)
+        SignUpScreen()
     }
 }
 
