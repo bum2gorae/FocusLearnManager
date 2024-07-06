@@ -63,11 +63,11 @@ fun SignUpScreen() {
     var companyEmail by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
-    var checkResult by remember { mutableStateOf(false) } //에러코드 발생시 true
     var checkCode by remember { mutableStateOf("")} //에러코드 발생시 입력
-    val checkCodeMap = mapOf("E01" to "Duplicated", //에러코드 관리
-        "E02" to "Not exist CompanyCode",
-        "E03" to "Not matching CompanyName")
+    val checkCodeMap = mapOf("" to "",
+        "E01" to "등록된 계정이 있습니다.", //에러코드 관리
+        "E02" to "없는 회사코드입니다",
+        "E03" to "회사명이 일치하지 않습니다")
     val fireDB = Firebase.firestore
     val context = LocalContext.current
     val contextAct = LocalContext.current as Activity?
@@ -158,9 +158,9 @@ fun SignUpScreen() {
                                     checkCode = ""
                                     Toast.makeText(context, "등록되었습니다", Toast.LENGTH_SHORT).show()
                                     contextAct?.finish()
-                                } else checkCode = "E01"; checkResult = true //duplicated
-                            } else checkCode = "E03"; checkResult = true //companyname error
-                        } else checkCode = "E02"; checkResult = true //companycode error
+                                } else checkCode = "E01";
+                            } else checkCode = "E03";
+                        } else checkCode = "E02";
                     }
                 },
                 modifier = Modifier
@@ -173,14 +173,7 @@ fun SignUpScreen() {
             }
         }
         Text(
-            text = if (checkResult) {
-                when (checkCode) {
-                    "E01" -> "등록된 계정이 있습니다."
-                    "E02" -> "없는 회사코드입니다"
-                    "E03" -> "회사명이 일치하지 않습니다"
-                    else -> ""
-                }
-            } else "",
+            text = checkCodeMap.get(checkCode)!!,
             color = Color.Black,
             modifier = Modifier
                 .padding(top = 8.dp),
