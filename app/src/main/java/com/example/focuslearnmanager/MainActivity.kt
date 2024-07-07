@@ -6,6 +6,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -33,7 +34,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.VisualTransformation
@@ -41,6 +44,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.focuslearnmanager.ui.theme.FocusLearnManagerTheme
+import com.google.firebase.Firebase
+import com.google.firebase.firestore.firestore
 
 
 class MainActivity : ComponentActivity() {
@@ -49,53 +54,75 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             FocusLearnManagerTheme {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    var userId by remember { mutableStateOf("") }
-                    var password by remember { mutableStateOf("") }
-                    val contextAct = LocalContext.current as Activity?
-                    LoginScreen(userId,
-                        password,
-                        onIDChange = {userId = it},
-                        onPasswordChange = {password = it}
-                        )
-                    Spacer(modifier = Modifier.height(30.dp))
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(end = 20.dp)
+                Box(modifier = Modifier.fillMaxSize()) {
+                    Image(
+                        painter = painterResource(id = R.drawable.focuslearnback),
+                        contentDescription = "background",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        ToRegisterBox(modifier = Modifier
-                            .align(Alignment.CenterEnd)
-                            .padding(end = 30.dp)
-                            .clickable {
-                                val intent = Intent(contextAct, RegisterActivity::class.java)
-                                contextAct?.startActivity(intent)
-                            })
-                    }
-                    Spacer(modifier = Modifier.height(30.dp))
-                    LoginBtnBox(
-                        onLoginBtnSuccess = {}
-                    )
-                }
+                        var userId by remember { mutableStateOf("") }
+                        var password by remember { mutableStateOf("") }
+                        val contextAct = LocalContext.current as Activity?
+                        val fireDB = Firebase.firestore
+                        LoginScreen(userId,
+                            password,
+                            onIDChange = { userId = it },
+                            onPasswordChange = { password = it }
+                        )
+                        Spacer(modifier = Modifier.height(30.dp))
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(end = 20.dp)
+                        ) {
+                            ToRegisterBox(modifier = Modifier
+                                .align(Alignment.CenterEnd)
+                                .padding(end = 30.dp)
+                                .clickable {
+                                    val intent = Intent(contextAct, RegisterActivity::class.java)
+                                    contextAct?.startActivity(intent)
+                                })
+                        }
+                        Spacer(modifier = Modifier.height(30.dp))
+                        LoginBtnBox(
+                            onLoginBtnSuccess = {
+                                fireDB.collection("Company").document(userId)
+                                    .get().addOnSuccessListener { document ->
+                                        if (document.exists()) {
+                                            val passwordDB = document.get("Password")
+                                            if (password == passwordDB) {
+                                                val intent = Intent(contextAct, MainScreenActivity::class.java)
+                                                intent.putExtra("companyCode", userId)
+                                                contextAct?.startActivity(intent)
+                                            }
+                                        }
+                                    }
 
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(40.dp),
-                    verticalArrangement = Arrangement.Bottom,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = "C Intel",
-                        fontSize = 14.sp,
-                        color = Color.Blue,
-                        fontWeight = FontWeight.Bold,
+                            }
+                        )
+                    }
+
+                    Column(
                         modifier = Modifier
-                            .padding(bottom = 16.dp)
-                    )
+                            .fillMaxSize()
+                            .padding(40.dp),
+                        verticalArrangement = Arrangement.Bottom,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "C Intel",
+                            fontSize = 14.sp,
+                            color = Color.Blue,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier
+                                .padding(bottom = 16.dp)
+                        )
+                    }
                 }
             }
         }
@@ -103,10 +130,11 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun LoginScreen(userId:String,
-                password:String,
-                onIDChange: (String) ->Unit,
-                onPasswordChange: (String) -> Unit
+fun LoginScreen(
+    userId: String,
+    password: String,
+    onIDChange: (String) -> Unit,
+    onPasswordChange: (String) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -214,8 +242,9 @@ fun TextInputField(
             modifier = modifier,
             shape = RoundedCornerShape(15.dp),
             colors = TextFieldDefaults.colors(
+                focusedContainerColor = backgroundColor,
                 unfocusedIndicatorColor = Color.Transparent,
-                focusedPlaceholderColor = Color.Blue
+                focusedPlaceholderColor = Color.Blue,
             ),
             textStyle = TextStyle(
                 fontSize = 14.sp

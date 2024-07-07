@@ -2,11 +2,11 @@ package com.example.focuslearnmanager
 
 import android.app.Activity
 import android.os.Bundle
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -28,15 +28,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import com.example.focuslearnmanager.ui.theme.FocusLearnManagerTheme
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
@@ -48,7 +48,15 @@ class RegisterActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             FocusLearnManagerTheme {
-                SignUpScreen()
+                Box(modifier = Modifier.fillMaxSize()) {
+                    Image(
+                        painter = painterResource(id = R.drawable.focuslearnback),
+                        contentDescription = "background",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                    SignUpScreen()
+                }
             }
         }
     }
@@ -158,9 +166,9 @@ fun SignUpScreen() {
                                     checkCode = ""
                                     Toast.makeText(context, "등록되었습니다", Toast.LENGTH_SHORT).show()
                                     contextAct?.finish()
-                                } else checkCode = "E01";
-                            } else checkCode = "E03";
-                        } else checkCode = "E02";
+                                } else checkCode = "E01"; //계정 존재
+                            } else checkCode = "E03"; //회사명 불일치
+                        } else checkCode = "E02"; //없는 회사 코드
                     }
                 },
                 modifier = Modifier
