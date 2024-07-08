@@ -47,7 +47,7 @@ import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
 
 @Composable
-fun OfficerRegistScreen(paddingValues: PaddingValues, companyCode: String) {
+fun OfficerRegistScreen(paddingValues: PaddingValues, companyCode: String, refreshTrigger: Boolean) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -152,7 +152,7 @@ fun OfficerRegistScreen(paddingValues: PaddingValues, companyCode: String) {
                 Log.d("test", companyCode)
                 var dataMap by remember { mutableStateOf<List<Map<String, Any>>>(emptyList()) }
 
-                LaunchedEffect(companyCode) {
+                LaunchedEffect(companyCode, refreshTrigger) {
                     fetchData(companyCode) { fetchedData ->
                         dataMap = fetchedData
                     }
@@ -160,16 +160,19 @@ fun OfficerRegistScreen(paddingValues: PaddingValues, companyCode: String) {
                 dataMap.forEach { datamap ->
                     val lectureCodeMap =
                         datamap["LectureCode"] as? Map<String, Boolean> ?: emptyMap()
-                    lectureCodeMap.keys.forEach { lecture ->
-                        TableRow(
-                            department = datamap.get("Department").toString(),
-                            companyID = datamap.get("ID").toString(),
-                            officerName = datamap.get("Department").toString(),
-                            officerPosition = datamap.get("Name").toString(),
-                            lectureName = lecture,
-                            lectureStatus = datamap.get("SecurityNumber").toString().substring(0, 6)
-                        )
-
+                    lectureCodeMap.keys.forEach { key ->
+                        val status = lectureCodeMap[key]
+                        if (status == true) {
+                            TableRow(
+                                department = datamap.get("Department").toString(),
+                                companyID = datamap.get("ID").toString(),
+                                officerName = datamap.get("Name").toString(),
+                                officerPosition = datamap.get("Position").toString(),
+                                lectureName = key,
+                                lectureStatus = datamap.get("SecurityNumber").toString()
+                                    .substring(0, 6)
+                            )
+                        }
                     }
                 }
             }
@@ -187,9 +190,7 @@ fun fetchData(
         val dataMap = mutableListOf<Map<String, Any>>()
         document.documents.forEach { it ->
             val data = it.data.orEmpty().toMutableMap()
-            Log.d("test", "${data["ID"]}")
             data["Name"] = it.id
-            Log.d("test", "${data["Name"]}")
             dataMap.add(data)
         }
         onDataFetched(dataMap)
@@ -200,6 +201,7 @@ fun fetchData(
 @Composable
 fun OfficerRegistScaffoldScreen(companyCode: String) {
     var showDialog by remember { mutableStateOf(false) }
+    var refreshTrigger by remember { mutableStateOf(false) }
 
     Scaffold(
         floatingActionButton = {
@@ -351,6 +353,7 @@ fun OfficerRegistScaffoldScreen(companyCode: String) {
                                             "LectureStatus" to lectureStatus
                                         )
                                         employeeDB.set(setData)
+                                        refreshTrigger = !refreshTrigger
                                     }
                                 }
 
@@ -370,7 +373,7 @@ fun OfficerRegistScaffoldScreen(companyCode: String) {
                     }
                 )
             }
-            OfficerRegistScreen(paddingValues, companyCode)
+            OfficerRegistScreen(paddingValues, companyCode, refreshTrigger)
 
         }
     )

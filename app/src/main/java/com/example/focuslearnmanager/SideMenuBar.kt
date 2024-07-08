@@ -51,7 +51,7 @@ fun FocusLearnNavi(navController: NavHostController,
                    companyCode : String) {
     NavHost(navController = navController, startDestination = FocusLearnManagerScreen.start.name) {
         composable(FocusLearnManagerScreen.start.name) { MainScreen() }
-        composable(FocusLearnManagerScreen.StatusList.name) { StatusListScreen() }
+        composable(FocusLearnManagerScreen.StatusList.name) { StatusListScreen(companyCode) }
         composable(FocusLearnManagerScreen.OfficerRegist.name) { OfficerRegistScaffoldScreen(companyCode) }
         // Add more destinations similarly.
     }

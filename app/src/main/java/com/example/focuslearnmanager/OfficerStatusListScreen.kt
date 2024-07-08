@@ -18,6 +18,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,7 +35,7 @@ import com.example.focuslearnmanager.ui.theme.FocusLearnManagerTheme
 
 
 @Composable
-fun StatusListScreen() {
+fun StatusListScreen(companyCode: String) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -117,6 +118,7 @@ fun StatusListScreen() {
             }
         }
         Spacer(modifier = Modifier.size(10.dp))
+
         TableRow(
             department = "부서",
             companyID = "사번",
@@ -130,35 +132,32 @@ fun StatusListScreen() {
         Column(
             modifier = Modifier.fillMaxWidth()
         ) {
-            TableRow(
-                department = "영업",
-                companyID = "0001",
-                officerName = "강민구",
-                officerPosition = "파트장",
-                lectureName = "개인정보보호",
-                lectureStatus = "완료",
-                color = Color.Red
-            )
-            TableRow(
-                department = "마케팅",
-                companyID = "0002",
-                officerName = "설경인",
-                officerPosition = "팀장",
-                lectureName = "산업안전법",
-                lectureStatus = "진행중",
-                color = Color.Blue
-            )
-            TableRow(
-                department = "개발",
-                companyID = "0003",
-                officerName = "이진원",
-                officerPosition = "매니저",
-                lectureName = "장애인인식개선",
-                lectureStatus = "완료",
-                color = Color.Red
-            )
-
-
+            var dataMap by remember { mutableStateOf<List<Map<String, Any>>>(emptyList()) }
+            LaunchedEffect(companyCode) {
+                fetchData(companyCode) { fetchedData ->
+                    dataMap = fetchedData
+                }
+            }
+            dataMap.forEach { datamap ->
+                val lectureCodeMap =
+                    datamap["LectureCode"] as? Map<String, Boolean> ?: emptyMap()
+                val lectureStatusMap =
+                    datamap["LectureStatus"] as? Map<String, Boolean> ?: emptyMap()
+                lectureCodeMap.keys.forEach { key ->
+                    val status = lectureCodeMap[key]
+                    if (status==true) {
+                        TableRow(
+                            department = datamap.get("Department").toString(),
+                            companyID = datamap.get("ID").toString(),
+                            officerName = datamap.get("Department").toString(),
+                            officerPosition = datamap.get("Name").toString(),
+                            lectureName = key,
+                            lectureStatus = if (lectureStatusMap[key]==true) "수료" else "진행중",
+                            color = if (lectureStatusMap[key]==true) Color.Red else Color.Blue
+                        )
+                    }
+                }
+            }
         }
     }
 }
