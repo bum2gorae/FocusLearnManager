@@ -60,7 +60,6 @@ class MainScreenActivity : ComponentActivity() {
                         Column(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .background(color = Color.Transparent)
                                 .padding(top = 15.dp, start = 10.dp, end = 10.dp)
                         ) {
                             SideMenuBar().TopBar(scope = scope, drawerState = drawerState)

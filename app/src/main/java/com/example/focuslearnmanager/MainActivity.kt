@@ -9,6 +9,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,18 +30,23 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.focuslearnmanager.ui.theme.FocusLearnManagerTheme
@@ -54,12 +60,20 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             FocusLearnManagerTheme {
+                val focusRequester = remember { FocusRequester() }
+                val focusManager = LocalFocusManager.current
                 Box(modifier = Modifier.fillMaxSize()) {
                     Image(
                         painter = painterResource(id = R.drawable.focuslearnback),
                         contentDescription = "background",
                         contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .pointerInput(Unit) {
+                                detectTapGestures(onTap = {
+                                    focusManager.clearFocus()
+                                })
+                            }
                     )
                     Column(
                         modifier = Modifier.fillMaxWidth(),
@@ -69,10 +83,32 @@ class MainActivity : ComponentActivity() {
                         var password by remember { mutableStateOf("") }
                         val contextAct = LocalContext.current as Activity?
                         val fireDB = Firebase.firestore
-                        LoginScreen(userId,
+                        LoginScreen(
+                            userId,
                             password,
                             onIDChange = { userId = it },
-                            onPasswordChange = { password = it }
+                            onPasswordChange = { password = it },
+                            focusRequester
+                        )
+                        Spacer(modifier = Modifier.height(20.dp))
+                        LoginBtnBox(
+                            onLoginBtnSuccess = {
+                                fireDB.collection("Company").document(userId)
+                                    .get().addOnSuccessListener { document ->
+                                        if (document.exists()) {
+                                            val passwordDB = document.get("Password")
+                                            if (password == passwordDB) {
+                                                val intent = Intent(
+                                                    contextAct,
+                                                    MainScreenActivity::class.java
+                                                )
+                                                intent.putExtra("companyCode", userId)
+                                                contextAct?.startActivity(intent)
+                                            }
+                                        }
+                                    }
+
+                            }
                         )
                         Spacer(modifier = Modifier.height(30.dp))
                         Box(
@@ -88,23 +124,6 @@ class MainActivity : ComponentActivity() {
                                     contextAct?.startActivity(intent)
                                 })
                         }
-                        Spacer(modifier = Modifier.height(30.dp))
-                        LoginBtnBox(
-                            onLoginBtnSuccess = {
-                                fireDB.collection("Company").document(userId)
-                                    .get().addOnSuccessListener { document ->
-                                        if (document.exists()) {
-                                            val passwordDB = document.get("Password")
-                                            if (password == passwordDB) {
-                                                val intent = Intent(contextAct, MainScreenActivity::class.java)
-                                                intent.putExtra("companyCode", userId)
-                                                contextAct?.startActivity(intent)
-                                            }
-                                        }
-                                    }
-
-                            }
-                        )
                     }
 
                     Column(
@@ -134,7 +153,8 @@ fun LoginScreen(
     userId: String,
     password: String,
     onIDChange: (String) -> Unit,
-    onPasswordChange: (String) -> Unit
+    onPasswordChange: (String) -> Unit,
+    focusRequester: FocusRequester
 ) {
     Column(
         modifier = Modifier
@@ -142,7 +162,11 @@ fun LoginScreen(
             .padding(bottom = 20.dp), // Adjust padding to position text as needed
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(modifier = Modifier.height(150.dp))
+        var isFocused by remember { mutableStateOf(false) }
+
+        if (isFocused) {
+            Spacer(modifier = Modifier.height(50.dp))
+        } else Spacer(modifier = Modifier.height(150.dp))
         Text(
             text = "FOCUS LEARN",
             fontSize = 29.sp,
@@ -162,17 +186,24 @@ fun LoginScreen(
             value = userId,
             onValueChange = { onIDChange(it) },
             modifier = Modifier
-                .size(width = 260.dp, height = 60.dp)
+                .size(width = 260.dp, height = 70.dp)
                 .background(Color.Transparent)
+                .onFocusChanged { focusState -> isFocused = focusState.isFocused }
+                .focusRequester(focusRequester),
+            fontsize = 18.sp
         )
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(10.dp))
         TextInputField(
             label = "PW 입력",
             value = password,
             onValueChange = { onPasswordChange(it) },
             modifier = Modifier
-                .size(width = 260.dp, height = 60.dp)
+                .size(width = 260.dp, height = 70.dp)
                 .background(Color.Transparent)
+                .onFocusChanged { focusState -> isFocused = focusState.isFocused }
+                .focusRequester(focusRequester),
+            visualTransformation = PasswordVisualTransformation(),
+            fontsize = 18.sp
         )
     }
 }
@@ -199,7 +230,7 @@ fun LoginBtnBox(
         colors = ButtonDefaults.buttonColors(
             containerColor = Color(0xFF0000CD) // This sets the background color to a blue shade
         ),
-        shape = RoundedCornerShape(8.dp), // Apply rounded corners
+        shape = RoundedCornerShape(12.dp), // Apply rounded corners
         modifier = Modifier
             .padding(horizontal = 8.dp)
             .width(160.dp)
@@ -223,10 +254,11 @@ fun TextInputField(
     value: String,
     onValueChange: (String) -> Unit,
     visualTransformation: VisualTransformation = VisualTransformation.None,
-    modifier: Modifier
+    modifier: Modifier,
+    fontsize: TextUnit = 14.sp
 ) {
     Box(
-        modifier = Modifier.padding(10.dp)
+        modifier = Modifier.padding(5.dp)
     ) {
         val backgroundColor = Color(0xFFE4E9FB)
         OutlinedTextField(
@@ -235,7 +267,7 @@ fun TextInputField(
             label = {
                 Text(
                     text = label,
-                    fontSize = 14.sp
+                    fontSize = fontsize
                 )
             },
             visualTransformation = visualTransformation,
@@ -247,7 +279,7 @@ fun TextInputField(
                 focusedPlaceholderColor = Color.Blue,
             ),
             textStyle = TextStyle(
-                fontSize = 14.sp
+                fontSize = fontsize
             ),
         )
     }

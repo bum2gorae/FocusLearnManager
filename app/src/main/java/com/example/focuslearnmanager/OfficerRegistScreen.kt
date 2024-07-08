@@ -1,6 +1,5 @@
 package com.example.focuslearnmanager
 
-import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -16,10 +15,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -38,16 +37,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.focuslearnmanager.ui.theme.FocusLearnManagerTheme
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
 
 @Composable
-fun OfficerRegistScreen(paddingValues: PaddingValues, companyCode: String, refreshTrigger: Boolean) {
+fun OfficerRegistScreen(
+    paddingValues: PaddingValues,
+    companyCode: String,
+    refreshTrigger: Boolean,
+    onRefreshTrigger: () -> Unit
+) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -93,7 +96,7 @@ fun OfficerRegistScreen(paddingValues: PaddingValues, companyCode: String, refre
                         shape = RoundedCornerShape(15.dp),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .size(width = 200.dp, height = 55.dp)
+                            .size(width = 200.dp, height = 45.dp)
                             .border(
                                 BorderStroke(width = 1.dp, color = Color.Black),
                                 shape = RoundedCornerShape(20.dp)
@@ -105,6 +108,9 @@ fun OfficerRegistScreen(paddingValues: PaddingValues, companyCode: String, refre
                             disabledPlaceholderColor = Color.Black,
                             focusedPlaceholderColor = Color.Black,
                             unfocusedContainerColor = Color.White
+                        ),
+                        textStyle = TextStyle(
+                            fontSize = 12.sp
                         )
                     )
                     Box(
@@ -137,19 +143,20 @@ fun OfficerRegistScreen(paddingValues: PaddingValues, companyCode: String, refre
             }
             Spacer(modifier = Modifier.size(10.dp))
             TableRow(
-                department = "부서",
-                companyID = "사번",
-                officerName = "이름",
-                officerPosition = "직책",
-                lectureName = "강의명",
-                lectureStatus = "생년월일",
+                "사번",
+                "이름",
+                "부서",
+                "직책",
+                "아이디",
+                "생년월일",
                 fontWeight = FontWeight.SemiBold
             )
 
             Column(
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Log.d("test", companyCode)
+                val showDialog = remember { mutableStateOf(false) }
+                val selectedData = remember { mutableStateOf<Map<String, Any>?>(null) }
                 var dataMap by remember { mutableStateOf<List<Map<String, Any>>>(emptyList()) }
 
                 LaunchedEffect(companyCode, refreshTrigger) {
@@ -158,22 +165,177 @@ fun OfficerRegistScreen(paddingValues: PaddingValues, companyCode: String, refre
                     }
                 }
                 dataMap.forEach { datamap ->
-                    val lectureCodeMap =
-                        datamap["LectureCode"] as? Map<String, Boolean> ?: emptyMap()
-                    lectureCodeMap.keys.forEach { key ->
-                        val status = lectureCodeMap[key]
-                        if (status == true) {
-                            TableRow(
-                                department = datamap.get("Department").toString(),
-                                companyID = datamap.get("ID").toString(),
-                                officerName = datamap.get("Name").toString(),
-                                officerPosition = datamap.get("Position").toString(),
-                                lectureName = key,
-                                lectureStatus = datamap.get("SecurityNumber").toString()
-                                    .substring(0, 6)
-                            )
+                    TableRow(
+                        datamap.get("CompanyNumber").toString(),
+                        datamap.get("Name").toString(),
+                        datamap.get("Department").toString(),
+                        datamap.get("Position").toString(),
+                        datamap.get("ID").toString(),
+                        datamap.get("SecurityNumber").toString()
+                            .substring(0, 6),
+                        modifier = Modifier.clickable {
+                            selectedData.value = datamap
+                            showDialog.value = true
                         }
-                    }
+                    )
+                }
+                var department by remember { mutableStateOf("") }
+                var companyNumber by remember { mutableStateOf("") }
+                var ID by remember { mutableStateOf("") }
+                var name by remember { mutableStateOf("") }
+                var phoneCall by remember { mutableStateOf("") }
+                var position by remember { mutableStateOf("") }
+                var securityNumber by remember { mutableStateOf("") }
+                val lectureCode = remember { mutableMapOf<String, Boolean>() }
+                val lectureStatus = mapOf(
+                    "장애인인식개선" to false,
+                    "직장내성희롱" to false,
+                    "산업안전법" to false,
+                    "개인정보보호" to false
+                )
+                var code1 by remember { mutableStateOf(false) }
+                var code2 by remember { mutableStateOf(false) }
+                var code3 by remember { mutableStateOf(false) }
+                var code4 by remember { mutableStateOf(false) }
+                if (showDialog.value) {
+                    AlertDialog(
+                        containerColor = Color.White,
+                        onDismissRequest = {
+                            showDialog.value = false
+                        },
+
+                        confirmButton = {
+                            Button(onClick = {
+                                val employeeDB = Firebase.firestore
+                                    .collection("Company")
+                                    .document(companyCode)
+                                    .collection("Employee")
+                                    .document(name)
+                                val setData = mutableMapOf(
+                                    "Department" to department,
+                                    "CompanyNumber" to companyNumber,
+                                    "ID" to ID,
+                                    "Position" to position,
+                                    "Phonecall" to phoneCall,
+                                    "SecurityNumber" to securityNumber,
+                                    "LectureCode" to lectureCode,
+                                    "LectureStatus" to lectureStatus
+                                )
+                                employeeDB.set(setData)
+                                onRefreshTrigger()
+                                showDialog.value = false
+                            }) {
+                                Text("수정")
+                            }
+                            Button(
+                                onClick = {
+                                    Firebase.firestore
+                                        .collection("Company")
+                                        .document(companyCode)
+                                        .collection("Employee")
+                                        .document(name)
+                                        .delete()
+
+                                    showDialog.value = false
+                                },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color.Red
+                                )
+                            ) {
+                                Text("삭제")
+                            }
+                        },
+                        dismissButton = {
+                            Button(onClick = { showDialog.value = false }) {
+                                Text("취소")
+                            }
+                        },
+                        title = {
+                            Text(text = "Data Details")
+                        },
+                        text = {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth(),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                department = selectedData.value?.get("Department").toString()
+                                companyNumber = selectedData.value?.get("CompanyNumber").toString()
+                                ID = selectedData.value?.get("ID").toString()
+                                name = selectedData.value?.get("Name").toString()
+                                phoneCall = selectedData.value?.get("Phonecall").toString()
+                                position = selectedData.value?.get("Position").toString()
+                                securityNumber =
+                                    selectedData.value?.get("SecurityNumber").toString()
+                                val tempLectureCode =
+                                    selectedData.value?.get("Lecturecode") as? Map<*, *>
+                                tempLectureCode?.let {
+                                    code1 = tempLectureCode["장애인인식개선"] as Boolean
+                                    code2 = tempLectureCode["직장내성희롱"] as Boolean
+                                    code3 = tempLectureCode["산업안전법"] as Boolean
+                                    code4 = tempLectureCode["개인정보보호"] as Boolean
+                                }
+
+                                TextInputField(
+                                    label = "사번",
+                                    value = companyNumber,
+                                    onValueChange = { companyNumber = it },
+                                    modifier = Modifier.height(58.dp),
+                                    fontsize = 12.sp
+                                )
+                                TextInputField(
+                                    label = "이름",
+                                    value = name,
+                                    onValueChange = { name = it },
+                                    modifier = Modifier.height(58.dp),
+                                    fontsize = 12.sp
+                                )
+                                TextInputField(
+                                    label = "부서",
+                                    value = department,
+                                    onValueChange = { department = it },
+                                    modifier = Modifier.height(58.dp),
+                                    fontsize = 12.sp
+                                )
+                                TextInputField(
+                                    label = "직책",
+                                    value = position,
+                                    onValueChange = { position = it },
+                                    modifier = Modifier.height(58.dp),
+                                    fontsize = 12.sp
+                                )
+                                TextInputField(
+                                    label = "전화번호",
+                                    value = phoneCall,
+                                    onValueChange = { phoneCall = it },
+                                    modifier = Modifier.height(58.dp),
+                                    fontsize = 12.sp
+                                )
+                                TextInputField(
+                                    label = "주민번호",
+                                    value = securityNumber,
+                                    onValueChange = { securityNumber = it },
+                                    modifier = Modifier.height(58.dp),
+                                    fontsize = 12.sp
+                                )
+                                TextInputField(
+                                    label = "아이디",
+                                    value = ID,
+                                    onValueChange = { ID = it },
+                                    modifier = Modifier.height(58.dp),
+                                    fontsize = 12.sp
+                                )
+                                Row {
+                                    code1 = lectureRadioButton(label = "장애인인식개선")
+                                    code2 = lectureRadioButton(label = "직장내성희롱")
+                                }
+                                Row {
+                                    code3 = lectureRadioButton(label = "산업안전법")
+                                    code4 = lectureRadioButton(label = "개인정보보호")
+                                }
+                            }
+                        }
+                    )
                 }
             }
         }
@@ -204,6 +366,7 @@ fun OfficerRegistScaffoldScreen(companyCode: String) {
     var refreshTrigger by remember { mutableStateOf(false) }
 
     Scaffold(
+        containerColor = Color.Transparent,
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { showDialog = true },
@@ -219,6 +382,7 @@ fun OfficerRegistScaffoldScreen(companyCode: String) {
         floatingActionButtonPosition = FabPosition.End,
         content = { paddingValues ->
             var department by remember { mutableStateOf("") }
+            var companyNumber by remember { mutableStateOf("") }
             var ID by remember { mutableStateOf("") }
             var name by remember { mutableStateOf("") }
             var phoneCall by remember { mutableStateOf("") }
@@ -237,7 +401,7 @@ fun OfficerRegistScaffoldScreen(companyCode: String) {
             var code4 by remember { mutableStateOf(false) }
             if (showDialog) {
                 AlertDialog(
-
+                    containerColor = Color.White,
                     onDismissRequest = { showDialog = false },
                     title = {
                         Column(
@@ -249,46 +413,59 @@ fun OfficerRegistScaffoldScreen(companyCode: String) {
                     },
                     text = {
                         Column(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(color = Color.White),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-
-
-                            TextInputField(
-                                label = "부서",
-                                value = department,
-                                onValueChange = { department = it },
-                                modifier = Modifier.height(60.dp)
-                            )
                             TextInputField(
                                 label = "사번",
-                                value = ID,
-                                onValueChange = { ID = it },
-                                modifier = Modifier.height(60.dp)
+                                value = companyNumber,
+                                onValueChange = { companyNumber = it },
+                                modifier = Modifier.height(58.dp),
+                                fontsize = 12.sp
                             )
                             TextInputField(
                                 label = "이름",
                                 value = name,
                                 onValueChange = { name = it },
-                                modifier = Modifier.height(60.dp)
+                                modifier = Modifier.height(58.dp),
+                                fontsize = 12.sp
+                            )
+                            TextInputField(
+                                label = "부서",
+                                value = department,
+                                onValueChange = { department = it },
+                                modifier = Modifier.height(58.dp),
+                                fontsize = 12.sp
                             )
                             TextInputField(
                                 label = "직책",
                                 value = position,
                                 onValueChange = { position = it },
-                                modifier = Modifier.height(60.dp)
+                                modifier = Modifier.height(58.dp),
+                                fontsize = 12.sp
                             )
                             TextInputField(
                                 label = "전화번호",
                                 value = phoneCall,
                                 onValueChange = { phoneCall = it },
-                                modifier = Modifier.height(60.dp)
+                                modifier = Modifier.height(58.dp),
+                                fontsize = 12.sp
                             )
                             TextInputField(
                                 label = "주민번호",
                                 value = securityNumber,
                                 onValueChange = { securityNumber = it },
-                                modifier = Modifier.height(60.dp)
+                                modifier = Modifier.height(58.dp),
+                                fontsize = 12.sp
+                            )
+                            TextInputField(
+                                label = "아이디",
+                                value = ID,
+                                onValueChange = { ID = it },
+                                modifier = Modifier.height(58.dp),
+                                fontsize = 12.sp
                             )
                             Row {
                                 code1 = lectureRadioButton(label = "장애인인식개선")
@@ -324,6 +501,7 @@ fun OfficerRegistScaffoldScreen(companyCode: String) {
                                             )
                                             val setData = mutableMapOf(
                                                 "Department" to department,
+                                                "CompanyNumber" to companyNumber,
                                                 "ID" to ID,
                                                 "Position" to position,
                                                 "Phonecall" to phoneCall,
@@ -345,6 +523,7 @@ fun OfficerRegistScaffoldScreen(companyCode: String) {
                                         )
                                         val setData = mutableMapOf(
                                             "Department" to department,
+                                            "CompanyNumber" to companyNumber,
                                             "ID" to ID,
                                             "Position" to position,
                                             "Phonecall" to phoneCall,
@@ -373,8 +552,8 @@ fun OfficerRegistScaffoldScreen(companyCode: String) {
                     }
                 )
             }
-            OfficerRegistScreen(paddingValues, companyCode, refreshTrigger)
-
+            OfficerRegistScreen(paddingValues, companyCode, refreshTrigger,
+                onRefreshTrigger = { refreshTrigger = !refreshTrigger })
         }
     )
 }

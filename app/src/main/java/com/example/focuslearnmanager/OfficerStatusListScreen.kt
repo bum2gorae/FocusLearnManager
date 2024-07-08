@@ -27,11 +27,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.focuslearnmanager.ui.theme.FocusLearnManagerTheme
 
 
 @Composable
@@ -75,7 +74,7 @@ fun StatusListScreen(companyCode: String) {
                     shape = RoundedCornerShape(15.dp),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .size(width = 200.dp, height = 55.dp)
+                        .size(width = 200.dp, height = 45.dp)
                         .border(
                             BorderStroke(width = 1.dp, color = Color.Black),
                             shape = RoundedCornerShape(20.dp)
@@ -87,6 +86,9 @@ fun StatusListScreen(companyCode: String) {
                         disabledPlaceholderColor = Color.Black,
                         focusedPlaceholderColor = Color.Black,
                         unfocusedContainerColor = Color.White
+                    ),
+                    textStyle = TextStyle(
+                        fontSize = 12.sp
                     )
                 )
                 Box(
@@ -120,12 +122,12 @@ fun StatusListScreen(companyCode: String) {
         Spacer(modifier = Modifier.size(10.dp))
 
         TableRow(
-            department = "부서",
-            companyID = "사번",
-            officerName = "이름",
-            officerPosition = "직책",
-            lectureName = "강의명",
-            lectureStatus = "진행상태",
+           "사번",
+            "이름",
+            "부서",
+            "직책",
+            "강의명",
+            "진행상태",
             fontWeight = FontWeight.SemiBold
         )
 
@@ -147,12 +149,12 @@ fun StatusListScreen(companyCode: String) {
                     val status = lectureCodeMap[key]
                     if (status==true) {
                         TableRow(
-                            department = datamap.get("Department").toString(),
-                            companyID = datamap.get("ID").toString(),
-                            officerName = datamap.get("Department").toString(),
-                            officerPosition = datamap.get("Name").toString(),
-                            lectureName = key,
-                            lectureStatus = if (lectureStatusMap[key]==true) "수료" else "진행중",
+                            datamap.get("Department").toString(),
+                            datamap.get("CompanyNumber").toString(),
+                            datamap.get("Department").toString(),
+                            datamap.get("Name").toString(),
+                            key,
+                            if (lectureStatusMap[key]==true) "수료" else "진행중",
                             color = if (lectureStatusMap[key]==true) Color.Red else Color.Blue
                         )
                     }
@@ -184,53 +186,54 @@ fun TableCell(
 
 @Composable
 fun TableRow(
-    department: String,
-    companyID: String,
-    officerName: String,
-    officerPosition: String,
-    lectureName: String,
-    lectureStatus: String,
+    data1: String,
+    data2: String,
+    data3: String,
+    data4: String,
+    data5: String,
+    data6: String,
     fontWeight: FontWeight = FontWeight.Normal,
-    color: Color = Color.Black
+    color: Color = Color.Black,
+    modifier: Modifier = Modifier
 ) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(start = 10.dp, end = 10.dp),
         horizontalArrangement = Arrangement.SpaceAround
     ) {
         TableCell(
-            label = department, modifier = Modifier
+            label = data1, modifier = Modifier
                 .weight(0.13f)
                 .size(40.dp),
             fontWeight
         )
         TableCell(
-            label = companyID, modifier = Modifier
+            label = data2, modifier = Modifier
                 .weight(0.13f)
                 .size(40.dp),
             fontWeight
         )
         TableCell(
-            label = officerName, modifier = Modifier
+            label = data3, modifier = Modifier
                 .weight(0.12f)
                 .size(40.dp),
             fontWeight
         )
         TableCell(
-            label = officerPosition, modifier = Modifier
+            label = data4, modifier = Modifier
                 .weight(0.12f)
                 .size(40.dp),
             fontWeight
         )
         TableCell(
-            label = lectureName, modifier = Modifier
+            label = data5, modifier = Modifier
                 .weight(0.25f)
                 .size(40.dp),
             fontWeight
         )
         TableCell(
-            label = lectureStatus, modifier = Modifier
+            label = data6, modifier = Modifier
                 .weight(0.15f)
                 .size(40.dp),
             fontWeight,

@@ -1,5 +1,6 @@
 package com.example.focuslearnmanager
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -67,7 +68,8 @@ class SideMenuBar {
             modifier = Modifier
                 .padding(top = 45.dp, bottom = 30.dp)
                 .fillMaxHeight(0.75f)
-                .fillMaxWidth(0.75f)
+                .fillMaxWidth(0.75f),
+            drawerContainerColor = Color.White
         ) {
             Column(
                 modifier = Modifier.fillMaxSize(),
@@ -112,7 +114,7 @@ class SideMenuBar {
                     thickness = 1.dp,
                     color = Color.Gray
                 )
-                SideBarContent(navController = navController, scope = scope, drawerState = drawerState, label = "직원 아이디 생성", FocusLearnManagerScreen.OfficerRegist.name)
+                SideBarContent(navController = navController, scope = scope, drawerState = drawerState, label = "직원 관리", FocusLearnManagerScreen.OfficerRegist.name)
                 SideBarContent(navController = navController, scope = scope, drawerState = drawerState, label = "직원 교육 현황", FocusLearnManagerScreen.StatusList.name)
                 SideBarContent(navController = navController, scope = scope, drawerState = drawerState, label = "교육 이수 통계 및 보고서", FocusLearnManagerScreen.StatusList.name)
 
