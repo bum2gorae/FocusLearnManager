@@ -11,6 +11,8 @@ composeBom = "2024.04.01"
 navigationRuntimeKtx = "2.7.7"
 navigationCompose = "2.7.7"
 roomCommon = "2.6.1"
+vico = "2.0.0-alpha.22"
+uiViewbinding = "1.6.8"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -29,7 +31,13 @@ androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
 androidx-navigation-runtime-ktx = { group = "androidx.navigation", name = "navigation-runtime-ktx", version.ref = "navigationRuntimeKtx" }
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
-androidx-room-common = { group = "androidx.room", name = "room-common", version.ref = "roomCommon" }
+androidx-room-common = { group = "androidx.room", name = "room-common", version.ref = "roomCommon"}
+vico-compose = { group = "com.patrykandpatrick.vico", name = "compose", version.ref = "vico" }
+vico-compose-m2 = { group = "com.patrykandpatrick.vico", name = "compose-m2", version.ref = "vico" }
+vico-compose-m3 = { group = "com.patrykandpatrick.vico", name = "compose-m3", version.ref = "vico" }
+vico-core = { group = "com.patrykandpatrick.vico", name = "core", version.ref = "vico" }
+vico-views = { group = "com.patrykandpatrick.vico", name = "views", version.ref = "vico" }
+androidx-ui-viewbinding = { group = "androidx.compose.ui", name = "ui-viewbinding", version.ref = "uiViewbinding" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

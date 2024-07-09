@@ -34,7 +34,7 @@ import androidx.compose.ui.unit.sp
 
 
 @Composable
-fun StatusListScreen(companyCode: String) {
+fun StatusListScreen(companyCode: String, navRefreshTrigger: Boolean) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -135,7 +135,7 @@ fun StatusListScreen(companyCode: String) {
             modifier = Modifier.fillMaxWidth()
         ) {
             var dataMap by remember { mutableStateOf<List<Map<String, Any>>>(emptyList()) }
-            LaunchedEffect(companyCode) {
+            LaunchedEffect(companyCode, navRefreshTrigger) {
                 fetchData(companyCode) { fetchedData ->
                     dataMap = fetchedData
                 }

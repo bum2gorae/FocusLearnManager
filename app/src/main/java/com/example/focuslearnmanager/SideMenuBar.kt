@@ -22,6 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -50,10 +51,20 @@ enum class FocusLearnManagerScreen() {
 @Composable
 fun FocusLearnNavi(navController: NavHostController,
                    companyCode : String) {
+    var navRefreshTrigger by rememberSaveable {
+        mutableStateOf(false)
+    }
     NavHost(navController = navController, startDestination = FocusLearnManagerScreen.start.name) {
         composable(FocusLearnManagerScreen.start.name) { MainScreen() }
-        composable(FocusLearnManagerScreen.StatusList.name) { StatusListScreen(companyCode) }
-        composable(FocusLearnManagerScreen.OfficerRegist.name) { OfficerRegistScaffoldScreen(companyCode) }
+        composable(FocusLearnManagerScreen.StatusList.name) { StatusListScreen(companyCode, navRefreshTrigger) }
+        composable(FocusLearnManagerScreen.OfficerRegist.name) { OfficerRegistScaffoldScreen(companyCode,
+            onNavRefreshTrigger = {
+                navRefreshTrigger = !navRefreshTrigger
+            },
+            onNavRefreshTrigger2 = {
+                navRefreshTrigger = !navRefreshTrigger
+            }) }
+        composable(FocusLearnManagerScreen.Report.name) { ReportScreen(companyCode, navRefreshTrigger) }
         // Add more destinations similarly.
     }
 }
@@ -177,7 +188,7 @@ class SideMenuBar {
                         id = R.drawable.icon_person
                     ),
                     contentDescription = "person",
-                    tint = Color.Magenta,
+                    tint = Color(0xffea9ef7),
                     modifier = Modifier.fillMaxSize()
                 )
             }

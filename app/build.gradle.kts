@@ -63,6 +63,7 @@ dependencies {
     implementation(libs.androidx.navigation.runtime.ktx)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.room.common)
+    implementation(libs.androidx.ui.viewbinding)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -74,7 +75,13 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:33.1.1"))
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-firestore")
-    implementation ("androidx.navigation:navigation-compose:2.7.7")
+    implementation("androidx.navigation:navigation-compose:2.7.7")
 
+    // For Jetpack Compose.
+    implementation("com.patrykandpatrick.vico:compose:2.0.0-alpha.22")
+    implementation("com.patrykandpatrick.vico:compose-m2:2.0.0-alpha.22")
+    implementation("com.patrykandpatrick.vico:compose-m3:2.0.0-alpha.22")
+    implementation("com.patrykandpatrick.vico:core:2.0.0-alpha.22")
+    implementation("com.patrykandpatrick.vico:views:2.0.0-alpha.22")
 
 }

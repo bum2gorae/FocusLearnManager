@@ -42,19 +42,20 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.firebase.Firebase
-import com.google.firebase.firestore.firestore
-
-@Composable
+import com.google.firebase.firestore.firestore@Composable
 fun OfficerRegistScreen(
     paddingValues: PaddingValues,
     companyCode: String,
     refreshTrigger: Boolean,
-    onRefreshTrigger: () -> Unit
+    onRefreshTrigger: () -> Unit,
+    onNavRefreshTrigger: () -> Unit
 ) {
+
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(paddingValues)
+            .padding()
     ) {
 
         Column(
@@ -187,12 +188,7 @@ fun OfficerRegistScreen(
                 var position by remember { mutableStateOf("") }
                 var securityNumber by remember { mutableStateOf("") }
                 val lectureCode = remember { mutableMapOf<String, Boolean>() }
-                val lectureStatus = mapOf(
-                    "장애인인식개선" to false,
-                    "직장내성희롱" to false,
-                    "산업안전법" to false,
-                    "개인정보보호" to false
-                )
+                val lectureStatus = remember {mutableMapOf<String, Boolean>()}
                 var code1 by remember { mutableStateOf(false) }
                 var code2 by remember { mutableStateOf(false) }
                 var code3 by remember { mutableStateOf(false) }
@@ -211,6 +207,22 @@ fun OfficerRegistScreen(
                                     .document(companyCode)
                                     .collection("Employee")
                                     .document(name)
+                                lectureCode.putAll(
+                                    mapOf(
+                                        "장애인인식개선" to code1,
+                                        "직장내성희롱" to code2,
+                                        "산업안전법" to code3,
+                                        "개인정보보호" to code4
+                                    )
+                                )
+                                val tempLectureStatus =
+                                    selectedData.value?.get("LectureStatus") as? Map<*, *>
+                                tempLectureStatus?.let {
+                                    lectureStatus["장애인인식개선"] = tempLectureStatus["장애인인식개선"] as Boolean
+                                    lectureStatus["직장내성희롱"] = tempLectureStatus["직장내성희롱"] as Boolean
+                                    lectureStatus["산업안전법"] = tempLectureStatus["산업안전법"] as Boolean
+                                    lectureStatus["개인정보보호"] = tempLectureStatus["개인정보보호"] as Boolean
+                                }
                                 val setData = mutableMapOf(
                                     "Department" to department,
                                     "CompanyNumber" to companyNumber,
@@ -223,6 +235,7 @@ fun OfficerRegistScreen(
                                 )
                                 employeeDB.set(setData)
                                 onRefreshTrigger()
+                                onNavRefreshTrigger()
                                 showDialog.value = false
                             }) {
                                 Text("수정")
@@ -258,7 +271,12 @@ fun OfficerRegistScreen(
                                 modifier = Modifier
                                     .fillMaxWidth(),
                                 horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
+                            )
+                            {
+                                var code1default = false
+                                var code2default = false
+                                var code3default = false
+                                var code4default = false
                                 department = selectedData.value?.get("Department").toString()
                                 companyNumber = selectedData.value?.get("CompanyNumber").toString()
                                 ID = selectedData.value?.get("ID").toString()
@@ -268,12 +286,12 @@ fun OfficerRegistScreen(
                                 securityNumber =
                                     selectedData.value?.get("SecurityNumber").toString()
                                 val tempLectureCode =
-                                    selectedData.value?.get("Lecturecode") as? Map<*, *>
+                                    selectedData.value?.get("LectureCode") as? Map<*, *>
                                 tempLectureCode?.let {
-                                    code1 = tempLectureCode["장애인인식개선"] as Boolean
-                                    code2 = tempLectureCode["직장내성희롱"] as Boolean
-                                    code3 = tempLectureCode["산업안전법"] as Boolean
-                                    code4 = tempLectureCode["개인정보보호"] as Boolean
+                                    code1default = tempLectureCode["장애인인식개선"] as Boolean
+                                    code2default = tempLectureCode["직장내성희롱"] as Boolean
+                                    code3default = tempLectureCode["산업안전법"] as Boolean
+                                    code4default = tempLectureCode["개인정보보호"] as Boolean
                                 }
 
                                 TextInputField(
@@ -326,12 +344,12 @@ fun OfficerRegistScreen(
                                     fontsize = 12.sp
                                 )
                                 Row {
-                                    code1 = lectureRadioButton(label = "장애인인식개선")
-                                    code2 = lectureRadioButton(label = "직장내성희롱")
+                                    code1 = lectureRadioButton(label = "장애인인식개선", code1default)
+                                    code2 = lectureRadioButton(label = "직장내성희롱", code2default)
                                 }
                                 Row {
-                                    code3 = lectureRadioButton(label = "산업안전법")
-                                    code4 = lectureRadioButton(label = "개인정보보호")
+                                    code3 = lectureRadioButton(label = "산업안전법", code3default)
+                                    code4 = lectureRadioButton(label = "개인정보보호", code4default)
                                 }
                             }
                         }
@@ -361,7 +379,10 @@ fun fetchData(
 
 
 @Composable
-fun OfficerRegistScaffoldScreen(companyCode: String) {
+fun OfficerRegistScaffoldScreen(companyCode: String,
+                                onNavRefreshTrigger: () -> Unit,
+                                onNavRefreshTrigger2: () -> Unit
+) {
     var showDialog by remember { mutableStateOf(false) }
     var refreshTrigger by remember { mutableStateOf(false) }
 
@@ -533,6 +554,7 @@ fun OfficerRegistScaffoldScreen(companyCode: String) {
                                         )
                                         employeeDB.set(setData)
                                         refreshTrigger = !refreshTrigger
+                                        onNavRefreshTrigger()
                                     }
                                 }
 
@@ -553,15 +575,16 @@ fun OfficerRegistScaffoldScreen(companyCode: String) {
                 )
             }
             OfficerRegistScreen(paddingValues, companyCode, refreshTrigger,
-                onRefreshTrigger = { refreshTrigger = !refreshTrigger })
+                onRefreshTrigger = { refreshTrigger = !refreshTrigger },
+                { onNavRefreshTrigger2() })
         }
     )
 }
 
 @Composable
-fun lectureRadioButton(label: String): Boolean {
+fun lectureRadioButton(label: String, default:Boolean = false): Boolean {
     var isSelected by remember {
-        mutableStateOf(false)
+        mutableStateOf(default)
     }
     Row(verticalAlignment = Alignment.CenterVertically) {
         Text(text = label)
