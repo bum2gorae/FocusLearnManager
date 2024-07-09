@@ -264,7 +264,12 @@ fun OfficerRegistScreen(
                             }
                         },
                         title = {
-                            Text(text = "Data Details")
+                            Column(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(text = "직원 정보 수정")
+                            }
                         },
                         text = {
                             Column(
