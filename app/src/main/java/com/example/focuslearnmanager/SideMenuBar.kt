@@ -54,7 +54,7 @@ fun FocusLearnNavi(navController: NavHostController,
     var navRefreshTrigger by rememberSaveable {
         mutableStateOf(false)
     }
-    NavHost(navController = navController, startDestination = FocusLearnManagerScreen.start.name) {
+    NavHost(navController = navController, startDestination = FocusLearnManagerScreen.Notice.name) {
         composable(FocusLearnManagerScreen.start.name) { MainScreen() }
         composable(FocusLearnManagerScreen.StatusList.name) { StatusListScreen(companyCode, navRefreshTrigger) }
         composable(FocusLearnManagerScreen.OfficerRegist.name) { OfficerRegistScaffoldScreen(companyCode,
@@ -64,7 +64,8 @@ fun FocusLearnNavi(navController: NavHostController,
             onNavRefreshTrigger2 = {
                 navRefreshTrigger = !navRefreshTrigger
             }) }
-        composable(FocusLearnManagerScreen.Report.name) { ReportScreen(companyCode, navRefreshTrigger) }
+//        composable(FocusLearnManagerScreen.Report.name) { ReportScreen(companyCode, navRefreshTrigger) }
+        composable(FocusLearnManagerScreen.Notice.name) { NotificationScreen() }
         // Add more destinations similarly.
     }
 }
@@ -127,7 +128,7 @@ class SideMenuBar {
                 )
                 SideBarContent(navController = navController, scope = scope, drawerState = drawerState, label = "직원 관리", FocusLearnManagerScreen.OfficerRegist.name)
                 SideBarContent(navController = navController, scope = scope, drawerState = drawerState, label = "직원 교육 현황", FocusLearnManagerScreen.StatusList.name)
-                SideBarContent(navController = navController, scope = scope, drawerState = drawerState, label = "교육 이수 통계 및 보고서", FocusLearnManagerScreen.StatusList.name)
+                SideBarContent(navController = navController, scope = scope, drawerState = drawerState, label = "교육 이수 통계 및 보고서", FocusLearnManagerScreen.start.name)
 
                 HorizontalDivider(
                     modifier = Modifier
@@ -136,7 +137,7 @@ class SideMenuBar {
                     thickness = 1.dp,
                     color = Color.Gray
                 )
-                SideBarContent(navController = navController, scope = scope, drawerState = drawerState, label = "공지사항 / 알림", FocusLearnManagerScreen.StatusList.name)
+                SideBarContent(navController = navController, scope = scope, drawerState = drawerState, label = "공지사항 / 알림", FocusLearnManagerScreen.Notice.name)
             }
         }
     }
